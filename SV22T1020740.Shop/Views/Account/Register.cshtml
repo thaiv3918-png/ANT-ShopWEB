@@ -1,0 +1,90 @@
+﻿@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center align-items-center vh-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header text-center">
+                    <h3 class="card-title">Đăng Ký</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="Register">
+                        <div class="form-group mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Nhập email" required />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="customerName" class="form-label">Tên khách hàng</label>
+                            <input type="text" class="form-control" id="customerName" name="customerName" placeholder="Nhập tên khách hàng" required />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="contactName" class="form-label">Tên liên hệ</label>
+                            <input type="text" class="form-control" id="contactName" name="contactName" placeholder="Nhập tên liên hệ" required />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="province" class="form-label">Tỉnh/Thành</label>
+                            <select class="form-control" id="province" name="province" required>
+                                <option value="">Chọn tỉnh/thành</option>
+                                @foreach (var province in ViewBag.Provinces)
+                                {
+                                    <option value="@province">@province</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Nhập mật khẩu" required />
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                    <i class="bi bi-eye-slash" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="confirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu" required />
+                        </div>
+
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="alert alert-danger">
+                                @ViewBag.Error
+                            </div>
+                        }
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Đăng ký</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons for Eye -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<!-- JavaScript to toggle password visibility -->
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function (e) {
+        const passwordField = document.getElementById('password');
+        const confirmPasswordField = document.getElementById('confirmPassword');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        // Toggle the type of password field
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            confirmPasswordField.type = 'text';
+            eyeIcon.classList.remove('bi-eye-slash');
+            eyeIcon.classList.add('bi-eye');
+        } else {
+            passwordField.type = 'password';
+            confirmPasswordField.type = 'password';
+            eyeIcon.classList.remove('bi-eye');
+            eyeIcon.classList.add('bi-eye-slash');
+        }
+    });
+</script>

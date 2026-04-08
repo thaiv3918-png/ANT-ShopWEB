@@ -1,0 +1,179 @@
+﻿@model SV22T1020740.Models.Sales.OrderSearchInput
+@using SV22T1020740.Models.Sales
+
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+    var statuses = ViewBag.OrderStatuses as List<OrderStatusEnum>;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 order-header">
+        <h2 class="fw-bold mb-0">Đơn hàng của tôi</h2>
+        <a href="@Url.Action("Index", "Product")" class="btn btn-outline-primary">
+            Tiếp tục mua hàng
+        </a>
+    </div>
+
+    @if (Context.Request.Query["success"] == "1")
+    {
+        <div class="alert alert-success">
+            Đặt hàng thành công. Đơn hàng của bạn đã được ghi nhận.
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form id="frmOrderSearch">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Từ khóa</label>
+                        <input type="text"
+                               class="form-control"
+                               name="SearchValue"
+                               value="@Model.SearchValue"
+                               placeholder="Nhập mã đơn, địa chỉ giao hàng..." />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-select" name="Status">
+                            <option value="0">-- Tất cả --</option>
+                            @if (statuses != null)
+                            {
+                                foreach (var s in statuses)
+                                {
+                                    if ((int)s == (int)Model.Status)
+                                    {
+                                        <option value="@((int)s)" selected>@s.GetDescription()</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@((int)s)">@s.GetDescription()</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Từ ngày</label>
+                        <input type="date"
+                               class="form-control"
+                               name="DateFrom"
+                               value="@(Model.DateFrom.HasValue? Model.DateFrom.Value.ToString("yyyy-MM-dd") : "")" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Đến ngày</label>
+                        <input type="date"
+                               class="form-control"
+                               name="DateTo"
+                               value="@(Model.DateTo.HasValue? Model.DateTo.Value.ToString("yyyy-MM-dd") : "")" />
+                    </div>
+
+                    <div class="col-md-2 d-grid">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                    </div>
+                </div>
+
+                <input type="hidden" name="Page" value="@Model.Page" />
+                <input type="hidden" name="PageSize" value="@Model.PageSize" />
+            </form>
+        </div>
+    </div>
+
+    <div id="orderSearchResult">
+        <div class="text-center py-5 text-muted">
+            Đang tải danh sách đơn hàng...
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media (max-width: 768px) {
+        .order-header {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 12px;
+        }
+
+            .order-header .btn {
+                width: 100%;
+            }
+    }
+</style>
+
+@section scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadOrders(1);
+            updateCartCount();
+
+            document.getElementById("frmOrderSearch").addEventListener("submit", function (e) {
+                e.preventDefault();
+                loadOrders(1);
+            });
+        });
+
+        function loadOrders(page) {
+            document.querySelector("input[name='Page']").value = page;
+
+            const form = document.getElementById("frmOrderSearch");
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
+
+            fetch('@Url.Action("Search", "Order")?' + params.toString(), {
+                method: 'GET'
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById("orderSearchResult").innerHTML = html;
+            })
+            .catch(error => {
+                console.error(error);
+                document.getElementById("orderSearchResult").innerHTML =
+                    '<div class="alert alert-danger">Không thể tải danh sách đơn hàng.</div>';
+            });
+        }
+
+        function cancelOrder(orderId) {
+            if (!confirm("Bạn có chắc muốn hủy đơn hàng này không?")) {
+                return;
+            }
+
+            fetch('@Url.Action("Cancel", "Order")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'id=' + encodeURIComponent(orderId)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code > 0) {
+                    alert(data.message || "Hủy đơn hàng thành công");
+                    loadOrders(document.querySelector("input[name='Page']").value || 1);
+                } else {
+                    alert(data.message || "Không thể hủy đơn hàng");
+                }
+            })
+            .catch(() => {
+                alert("Lỗi hệ thống");
+            });
+        }
+
+        function updateCartCount() {
+            fetch('@Url.Action("GetCartCount", "Order")')
+            .then(response => response.json())
+            .then(count => {
+                const badge = document.getElementById('cartCount');
+                if (badge) {
+                    badge.innerText = count;
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            })
+            .catch(() => {});
+        }
+    </script>
+}

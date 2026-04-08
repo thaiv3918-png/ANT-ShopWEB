@@ -1,0 +1,101 @@
+﻿@{
+    ViewData["Title"] = "Thông Tin Tài Khoản";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center align-items-center vh-100">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="form-container">
+                <h3 class="text-center">Thông Tin Tài Khoản</h3>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">
+                        @TempData["Success"]
+                    </div>
+                }
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">
+                        @ViewBag.Error
+                    </div>
+                }
+
+                <form method="post" asp-action="Profile" onsubmit="return confirmUpdate();">
+                    <input type="hidden" name="CustomerID" value="@Model.CustomerID" />
+                    <input type="hidden" name="Email" value="@Model.Email" />
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Mã khách hàng</label>
+                            <input type="text" class="form-control" value="@Model.CustomerID" disabled />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="@Model.Email" disabled />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="Province" class="form-label">Tỉnh/Thành</label>
+                            <select class="form-control" id="Province" name="Province" required>
+                                <option value="">Chọn tỉnh/thành</option>
+                                @foreach (string province in ViewBag.Provinces)
+                                {
+                                    if (province == Model.Province)
+                                    {
+                                        <option value="@province" selected>@province</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@province">@province</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="CustomerName" class="form-label">Tên khách hàng</label>
+                            <input type="text" class="form-control" id="CustomerName" name="CustomerName" value="@Model.CustomerName" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ContactName" class="form-label">Tên liên hệ</label>
+                            <input type="text" class="form-control" id="ContactName" name="ContactName" value="@Model.ContactName" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Phone" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="Phone" name="Phone" value="@Model.Phone" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Address" class="form-label">Địa chỉ</label>
+                        <input type="text" class="form-control" id="Address" name="Address" value="@Model.Address" />
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Cập nhật thông tin</button>
+                    </div>
+
+                </form>
+
+                <div class="d-grid gap-2 mt-3">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Quay lại trang chủ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmUpdate() {
+        return confirm("Bạn có chắc muốn cập nhật thông tin tài khoản không?");
+    }
+</script>

@@ -1,0 +1,228 @@
+﻿@model SV22T1020740.Models.Common.PagedResult<SV22T1020740.Models.Catalog.Product>
+
+@if (Model == null || Model.DataItems == null || !Model.DataItems.Any())
+{
+    <div class="alert alert-info">
+        Không tìm thấy sản phẩm nào.
+    </div>
+}
+else
+{
+    <div class="row g-4 product-grid">
+        @foreach (var item in Model.DataItems)
+        {
+            var imageUrl = string.IsNullOrWhiteSpace(item.Photo);
+
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card product-card h-100 border-0 shadow-sm">
+                    <div class="product-image-wrap">
+                        <img src="@imageUrl"
+                             alt="@item.ProductName"
+                             class="product-image"
+                             onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="product-title">@item.ProductName</h5>
+
+                        @if (!string.IsNullOrWhiteSpace(item.ProductDescription))
+                        {
+                            <p class="product-desc">
+                                @(item.ProductDescription.Length > 70
+                                                    ? item.ProductDescription.Substring(0, 70) + "..."
+                                                    : item.ProductDescription)
+                </p>
+                                }
+                        else
+                        {
+                            <p class="product-desc empty-desc">&nbsp;</p>
+                        }
+
+                        <div class="product-meta">
+                            <span>Đơn vị: <strong>@item.Unit</strong></span>
+                        </div>
+
+                        <div class="product-price">
+                            @item.Price.ToString("N0") đ
+                        </div>
+
+                        <div class="product-actions mt-auto">
+                            <a href="@Url.Action("Details", "Product", new { id = item.ProductID })"
+                               class="btn btn-light btn-detail">
+                                <i class="bi bi-eye"></i> Xem chi tiết
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-primary btn-cart"
+                                    onclick="addToCart(@item.ProductID, 1)">
+                                <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.PageCount > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                @if (Model.HasPreviousPage)
+                {
+                    <li class="page-item">
+                        <a href="javascript:void(0)" class="page-link" onclick="loadProducts(@(Model.Page - 1))">&laquo;</a>
+                    </li>
+                }
+
+                @foreach (var p in Model.GetDisplayPages())
+                {
+                    if (p.Page == 0)
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    }
+                    else if (p.Page == Model.Page)
+                    {
+                        <li class="page-item active">
+                            <span class="page-link">@p.Page</span>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item">
+                            <a href="javascript:void(0)" class="page-link" onclick="loadProducts(@p.Page)">
+                                @p.Page
+                            </a>
+                        </li>
+                    }
+                }
+
+                @if (Model.HasNextPage)
+                {
+                    <li class="page-item">
+                        <a href="javascript:void(0)" class="page-link" onclick="loadProducts(@(Model.Page + 1))">&raquo;</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}
+
+<style>
+    .product-grid {
+        align-items: stretch;
+    }
+
+    .product-card {
+        border-radius: 18px;
+        overflow: hidden;
+        transition: all 0.25s ease;
+        background: #fff;
+    }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.12) !important;
+        }
+
+    .product-image-wrap {
+        width: 100%;
+        height: 230px;
+        overflow: hidden;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid #eee;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .product-title {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.4;
+        min-height: 50px;
+        margin-bottom: 10px;
+    }
+
+    .product-desc {
+        font-size: 14px;
+        color: #6c757d;
+        line-height: 1.5;
+        min-height: 42px;
+        margin-bottom: 10px;
+    }
+
+    .empty-desc {
+        visibility: hidden;
+    }
+
+    .product-meta {
+        font-size: 14px;
+        margin-bottom: 10px;
+        color: #495057;
+    }
+
+    .product-price {
+        font-size: 24px;
+        font-weight: 800;
+        color: #dc3545;
+        margin-bottom: 16px;
+    }
+
+    .product-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .btn-detail,
+    .btn-cart {
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 600;
+    }
+
+    .btn-detail {
+        border: 1px solid #dee2e6;
+        background: #fff;
+    }
+
+        .btn-detail:hover {
+            background: #f8f9fa;
+        }
+
+    .btn-cart {
+        box-shadow: 0 8px 20px rgba(13, 110, 253, 0.18);
+    }
+
+    @@media (max-width: 991.98px) {
+        .product-image-wrap {
+            height: 210px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .product-title {
+            min-height: auto;
+            font-size: 17px;
+        }
+
+        .product-desc {
+            min-height: auto;
+        }
+
+        .product-image-wrap {
+            height: 220px;
+        }
+    }
+</style>

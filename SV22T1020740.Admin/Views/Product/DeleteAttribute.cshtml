@@ -1,0 +1,99 @@
+﻿@model ProductAttribute
+@{
+    ViewBag.Title = "Xóa thuộc tính mặt hàng";
+}
+
+@section PageToolBar {
+    <a href="~/Product/Edit/@Model.ProductID#attributes" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="card card-outline card-danger">
+            <div class="card-header">
+                <h3 class="card-title fw-bold mb-0">
+                    Xác nhận xóa thuộc tính
+                </h3>
+            </div>
+
+            <div class="card-body">
+
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    Bạn có chắc chắn muốn xóa <strong>thuộc tính</strong> này?
+                </div>
+
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th style="width:35%">Tên thuộc tính</th>
+                            <td>@Model.AttributeName</td>
+                        </tr>
+                        <tr>
+                            <th>Giá trị</th>
+                            <td>@Model.AttributeValue</td>
+                        </tr>
+                        <tr>
+                            <th>Thứ tự hiển thị</th>
+                            <td>@Model.DisplayOrder</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="~/Product/Edit/@Model.ProductID#attributes" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Bỏ qua
+                    </a>
+
+                    <button type="button"
+                            class="btn btn-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmDeleteModal">
+                        <i class="bi bi-trash me-1"></i>
+                        Xác nhận xóa
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">
+                    Xác nhận xóa thuộc tính
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa thuộc tính này không?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Hủy
+                </button>
+
+                <form method="post" asp-action="ConfirmDeleteAttribute" asp-controller="Product">
+                    <input type="hidden" name="productId" value="@Model.ProductID" />
+                    <input type="hidden" name="attributeId" value="@Model.AttributeID" />
+
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>
+                        Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

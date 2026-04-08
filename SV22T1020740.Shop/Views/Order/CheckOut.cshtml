@@ -1,0 +1,236 @@
+﻿@model List<SV22T1020740.Models.Sales.ShoppingCartItem>
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Tiến hành đặt hàng";
+    var provinces = ViewBag.Provinces as List<SelectListItem>;
+    decimal totalAmount = Model?.Sum(x => x.Quantity * x.SalePrice) ?? 0;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 checkout-header">
+        <h2 class="fw-bold mb-0">Tiến hành đặt hàng</h2>
+        <a href="@Url.Action("Cart", "Order")" class="btn btn-outline-secondary">
+            Quay lại giỏ hàng
+        </a>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            Không có sản phẩm nào để đặt hàng.
+        </div>
+
+        <a href="@Url.Action("Index", "Product")" class="btn btn-primary">
+            Đi đến trang sản phẩm
+        </a>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold">
+                        Thông tin giao hàng
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="province" class="form-label">Tỉnh/Thành</label>
+                            <select id="province" class="form-select">
+                                @if (provinces != null)
+                                {
+                                    foreach (var p in provinces)
+                                    {
+                                        <option value="@p.Value">@p.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Địa chỉ giao hàng</label>
+                            <input type="text"
+                                   id="address"
+                                   class="form-control"
+                                   placeholder="Nhập địa chỉ giao hàng" />
+                        </div>
+
+                        <div class="alert alert-warning mb-0">
+                            Vui lòng kiểm tra kỹ thông tin giao hàng trước khi xác nhận đặt hàng.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold">
+                        Đơn hàng của bạn
+                    </div>
+                    <div class="card-body">
+                        @foreach (var item in Model)
+                        {
+                            var imageUrl = string.IsNullOrWhiteSpace(item.Photo)
+                            ? "/images/no-image.png"
+                            : item.Photo;
+
+                            <div class="d-flex align-items-center border-bottom py-3 gap-3">
+                                <div class="checkout-image-box">
+                                    <img src="@imageUrl"
+                                         alt="Ảnh sản phẩm"
+                                         class="checkout-image"
+                                         onerror="this.onerror=null;this.src='/images/no-image.png';this.alt='No image';" />
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">@item.ProductName</div>
+                                    <div class="text-muted small">SL: @item.Quantity</div>
+                                </div>
+
+                                <div class="text-danger fw-bold">
+                                    @((item.Quantity * item.SalePrice).ToString("N0")) đ
+                                </div>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="fw-bold">Tổng cộng</span>
+                            <span class="text-danger fs-4 fw-bold">@totalAmount.ToString("N0") đ</span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="button" id="btnCreateOrder" class="btn btn-success btn-lg" onclick="createOrder()">
+                                Xác nhận đặt hàng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .checkout-image-box {
+        width: 70px;
+        height: 70px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f8f9fa;
+        border: 1px solid #eee;
+        flex-shrink: 0;
+    }
+
+    .checkout-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    @@media (max-width: 768px) {
+        .checkout-header {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 12px;
+        }
+
+            .checkout-header .btn {
+                width: 100%;
+            }
+    }
+</style>
+
+@section scripts {
+    <script>
+        let isSubmittingOrder = false;
+
+        function createOrder() {
+            if (isSubmittingOrder) return;
+
+            const province = document.getElementById("province").value.trim();
+            const address = document.getElementById("address").value.trim();
+            const submitBtn = document.getElementById("btnCreateOrder");
+
+            if (!province) {
+                alert("Vui lòng chọn tỉnh/thành");
+                document.getElementById("province").focus();
+                return;
+            }
+
+            if (!address) {
+                alert("Vui lòng nhập địa chỉ giao hàng");
+                document.getElementById("address").focus();
+                return;
+            }
+
+            if (!confirm("Bạn có chắc muốn đặt đơn hàng này không?")) {
+                return;
+            }
+
+            isSubmittingOrder = true;
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Đang xử lý...";
+            }
+
+            fetch('@Url.Action("CreateOrder", "Order")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'province=' + encodeURIComponent(province) + '&address=' + encodeURIComponent(address)
+            })
+            .then(async response => {
+                const text = await response.text();
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status + " - " + text);
+                }
+
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    throw new Error("Response is not valid JSON: " + text);
+                }
+            })
+            .then(data => {
+                if (data.code > 0) {
+                    alert("Đặt hàng thành công");
+
+                    const badge = document.getElementById("cartCount");
+                    if (badge) {
+                        badge.innerText = "0";
+                        badge.style.display = "none";
+                    }
+
+                    window.location.href = '@Url.Action("Index", "Order")?success=1';
+                    return;
+                }
+
+                isSubmittingOrder = false;
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Xác nhận đặt hàng";
+                }
+
+                alert(data.message || "Không thể tạo đơn hàng");
+            })
+            .catch(error => {
+                console.error("CreateOrder error:", error);
+
+                isSubmittingOrder = false;
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Xác nhận đặt hàng";
+                }
+
+                alert("Lỗi hệ thống, vui lòng thử lại sau");
+            });
+        }
+    </script>
+}

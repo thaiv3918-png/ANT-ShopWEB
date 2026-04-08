@@ -1,0 +1,72 @@
+﻿@model SV22T1020740.Models.Catalog.Product
+@using SV22T1020740.Models.Catalog
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+    var photos = ViewBag.Photos as List<SV22T1020740.Models.Catalog.ProductPhoto>;
+    var attributes = ViewBag.Attributes as List<SV22T1020740.Models.Catalog.ProductAttribute>;
+
+    string mainPhoto = !string.IsNullOrWhiteSpace(Model.Photo)
+        ? Model.Photo
+        : "/images/no-image.png";
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-5">
+            <img src="@mainPhoto"
+                 class="img-fluid rounded shadow-sm mb-3"
+                 alt="@Model.ProductName"
+                 style="width:100%; max-height:400px; object-fit:cover;" />
+
+            @if (photos != null && photos.Any())
+            {
+                <div class="row">
+                    @foreach (var p in photos)
+                    {
+                        <div class="col-3 mb-3">
+                            <img src="@p.Photo"
+                                 class="img-fluid rounded border"
+                                 alt="@Model.ProductName"
+                                 style="height:80px; width:100%; object-fit:cover;" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="col-md-7">
+            <h2 class="fw-bold">@Model.ProductName</h2>
+
+            <p class="text-danger fs-3 fw-bold">@Model.Price.ToString("N0") đ</p>
+
+            <p><strong>Đơn vị:</strong> @Model.Unit</p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ProductDescription))
+            {
+                <p><strong>Mô tả:</strong> @Model.ProductDescription</p>
+            }
+
+            @if (attributes != null && attributes.Any())
+            {
+                <hr />
+                <h5>Thông số sản phẩm</h5>
+                <table class="table table-bordered">
+                    <tbody>
+                        @foreach (var a in attributes)
+                        {
+                            <tr>
+                                <th style="width:35%">@a.AttributeName</th>
+                                <td>@a.AttributeValue</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            <a href="@Url.Action("Index", "Product")" class="btn btn-secondary mt-3">
+                Quay lại danh sách
+            </a>
+        </div>
+    </div>
+</div>

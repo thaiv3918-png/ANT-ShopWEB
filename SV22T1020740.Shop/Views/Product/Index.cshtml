@@ -1,0 +1,171 @@
+﻿@model SV22T1020740.Models.Catalog.ProductSearchInput
+@using SV22T1020740.Models.Common
+@using SV22T1020740.Models.Catalog
+
+@{
+    ViewData["Title"] = "Sản phẩm";
+    var categories = ViewBag.Categories as PagedResult<Category>;
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4">Danh sách sản phẩm</h2>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form id="frmSearch">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Từ khóa</label>
+                        <input type="text"
+                               class="form-control"
+                               name="SearchValue"
+                               value="@Model.SearchValue"
+                               placeholder="Nhập tên sản phẩm..." />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Loại hàng</label>
+                        <select class="form-select" name="CategoryID">
+                            <option value="0">-- Tất cả loại hàng --</option>
+                            @if (categories != null && categories.DataItems != null)
+                            {
+                                foreach (var c in categories.DataItems)
+                                {
+                                    if (c.CategoryID == Model.CategoryID)
+                                    {
+                                        <option value="@c.CategoryID" selected>@c.CategoryName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@c.CategoryID">@c.CategoryName</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Giá từ</label>
+                        <input type="number"
+                               class="form-control"
+                               name="MinPrice"
+                               value="@(Model.MinPrice == 0 ? "" : Model.MinPrice.ToString())"
+                               min="0" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Đến</label>
+                        <input type="number"
+                               class="form-control"
+                               name="MaxPrice"
+                               value="@(Model.MaxPrice == 0 ? "" : Model.MaxPrice.ToString())"
+                               min="0" />
+                    </div>
+
+                    <div class="col-md-1 d-grid">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary">Lọc</button>
+                    </div>
+                </div>
+
+                <input type="hidden" name="Page" value="@Model.Page" />
+                <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                <input type="hidden" name="SupplierID" value="@Model.SupplierID" />
+            </form>
+        </div>
+    </div>
+
+    <div id="searchResult" class="mt-4">
+        <div class="text-center py-5 text-muted">Đang tải dữ liệu...</div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadProducts(@Model.Page);
+            updateCartCount();
+
+            document.getElementById("frmSearch").addEventListener("submit", function (e) {
+                e.preventDefault();
+                loadProducts(1);
+            });
+        });
+
+        function loadProducts(page) {
+            document.querySelector("input[name='Page']").value = page;
+
+            const form = document.getElementById("frmSearch");
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
+
+            fetch('@Url.Action("Search", "Product")?' + params.toString(), {
+                method: 'GET'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("HTTP error: " + response.status);
+                }
+                return response.text();
+            })
+            .then(html => {
+                document.getElementById("searchResult").innerHTML = html;
+            })
+            .catch(error => {
+                console.error(error);
+                document.getElementById("searchResult").innerHTML =
+                    '<div class="alert alert-danger">Không thể tải danh sách sản phẩm.</div>';
+            });
+        }
+
+        function addToCart(productId, quantity = 1) {
+            quantity = parseInt(quantity);
+
+            if (isNaN(quantity) || quantity <= 0) {
+                alert("Số lượng không hợp lệ");
+                return;
+            }
+
+            fetch('@Url.Action("AddCartItem", "Order")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'productId=' + encodeURIComponent(productId) + '&quantity=' + encodeURIComponent(quantity)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0 && data.message === "Vui lòng đăng nhập") {
+                    alert("Bạn cần đăng nhập trước khi thêm sản phẩm vào giỏ hàng");
+                    window.location.href = '@Url.Action("Login", "Account")';
+                    return;
+                }
+
+                if (data.code > 0) {
+                    alert("Đã thêm sản phẩm vào giỏ hàng");
+                    updateCartCount();
+                } else {
+                    alert(data.message || "Không thể thêm sản phẩm vào giỏ hàng");
+                }
+            })
+            .catch(error => {
+                console.error("AddToCart error:", error);
+                alert("Lỗi hệ thống, vui lòng thử lại sau");
+            });
+        }
+
+        function updateCartCount() {
+            fetch('@Url.Action("GetCartCount", "Order")')
+            .then(response => response.json())
+            .then(count => {
+                const badge = document.getElementById('cartCount');
+                if (badge) {
+                    badge.innerText = count;
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            })
+            .catch(error => {
+                console.error("GetCartCount error:", error);
+            });
+        }
+    </script>
+}

@@ -1,0 +1,72 @@
+﻿/* custom.css */
+
+/* Đảm bảo form chiếm toàn bộ chiều rộng */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Chiếm toàn bộ chiều cao */
+}
+
+/* Form chiếm hết chiều rộng */
+.form-container {
+    width: 100%;
+    padding: 30px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Đảm bảo các trường nhập liệu chiếm toàn bộ chiều rộng */
+.form-control {
+    width: 100%; /* Chiếm toàn bộ chiều rộng của thẻ cha */
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Card */
+.card {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Card header */
+.card-header {
+    background-color: #0d6efd;
+    color: white;
+    font-size: 24px;
+}
+
+/* Nút */
+.btn-success {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+    .btn-success:hover {
+        background-color: #0b5ed7;
+    }
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+    .btn-secondary:hover {
+        background-color: #5a636d;
+    }
+
+/* Đảm bảo các trường được căn chỉnh hàng ngang khi cần */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Khoảng cách giữa các trường */
+}
+
+    .form-row .form-group {
+        flex: 1 1 45%; /* Mỗi trường chiếm khoảng 45% chiều rộng của thẻ cha */
+    }

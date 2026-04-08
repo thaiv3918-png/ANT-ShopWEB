@@ -1,0 +1,132 @@
+﻿@model List<SV22T1020740.Models.Sales.ShoppingCartItem>
+
+@{
+    decimal totalAmount = Model?.Sum(x => x.Quantity * x.SalePrice) ?? 0;
+}
+
+@if (Model == null || !Model.Any())
+{
+    <div class="p-3 text-center text-muted">
+        Giỏ hàng đang trống.
+    </div>
+}
+else
+{
+    <div class="showcart-container">
+        <div class="showcart-list">
+            @foreach (var item in Model)
+            {
+                var imageUrl = string.IsNullOrWhiteSpace(item.Photo)
+                ? "/images/no-image.png"
+                : item.Photo;
+
+                <div class="showcart-item">
+                    <div class="showcart-image">
+                        <img src="@imageUrl"
+                             alt="@item.ProductName"
+                             onerror="this.src='/images/no-image.png'" />
+                    </div>
+
+                    <div class="showcart-info">
+                        <div class="showcart-name">@item.ProductName</div>
+                        <div class="showcart-meta">SL: @item.Quantity</div>
+                        <div class="showcart-price">@((item.Quantity * item.SalePrice).ToString("N0")) đ</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="showcart-footer">
+            <div class="showcart-total">
+                <span>Tổng cộng:</span>
+                <strong>@totalAmount.ToString("N0") đ</strong>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a href="@Url.Action("Cart", "Order")" class="btn btn-outline-primary btn-sm">
+                    Xem giỏ hàng
+                </a>
+                <a href="@Url.Action("Checkout", "Order")" class="btn btn-primary btn-sm">
+                    Thanh toán
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .showcart-container {
+        min-width: 320px;
+        max-width: 380px;
+        background: #fff;
+    }
+
+    .showcart-list {
+        max-height: 320px;
+        overflow-y: auto;
+        padding: 12px;
+    }
+
+    .showcart-item {
+        display: flex;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+        .showcart-item:last-child {
+            border-bottom: none;
+        }
+
+    .showcart-image img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #eee;
+    }
+
+    .showcart-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .showcart-name {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.4;
+        margin-bottom: 4px;
+        color: #212529;
+    }
+
+    .showcart-meta {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+
+    .showcart-price {
+        font-size: 14px;
+        font-weight: 700;
+        color: #dc3545;
+    }
+
+    .showcart-footer {
+        border-top: 1px solid #eee;
+        padding: 12px;
+        background: #fafafa;
+    }
+
+    .showcart-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 15px;
+    }
+
+        .showcart-total strong {
+            color: #dc3545;
+            font-size: 16px;
+        }
+</style>

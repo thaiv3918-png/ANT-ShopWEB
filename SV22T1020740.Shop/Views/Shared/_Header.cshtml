@@ -1,0 +1,309 @@
+﻿@{
+    var userData = User.GetUserData();
+}
+
+<nav class="custom-navbar">
+    <div class="nav-container">
+
+        <div class="nav-left">
+            <a asp-controller="Home" asp-action="Index" class="logo">
+                🛒 <span>MyShop</span>
+            </a>
+        </div>
+
+        <div class="nav-center">
+            <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+            <a asp-controller="Product" asp-action="Index">Sản phẩm</a>
+
+            @if (userData != null)
+            {
+                <a asp-controller="Order" asp-action="Index">Đơn hàng</a>
+            }
+        </div>
+
+        <div class="nav-right">
+            <a asp-controller="Order" asp-action="Cart" class="cart-box">
+                🛍
+                <span id="cartCount" class="cart-badge">0</span>
+            </a>
+
+            @if (userData == null)
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn-login">
+                    Đăng nhập
+                </a>
+
+                <a asp-controller="Account" asp-action="Register" class="btn-register">
+                    Đăng ký
+                </a>
+            }
+            else
+            {
+                <div class="user-box" id="userBox">
+                    <div class="user-trigger" id="userTrigger" onclick="toggleDropdown(event)">
+                        👤 @userData.DisplayName
+                    </div>
+
+                    <div class="user-dropdown" id="userDropdown">
+                        <a asp-controller="Account" asp-action="Profile">Thông tin</a>
+                        <a asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+                        <a asp-controller="Order" asp-action="Index">Đơn hàng</a>
+                        <hr />
+                        <a asp-controller="Account" asp-action="Logout" class="logout">Đăng xuất</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</nav>
+
+<script>
+
+    function toggleDropdown(event) {
+        event.stopPropagation();
+
+        const dropdown = document.getElementById("userDropdown");
+        if (!dropdown) return;
+
+        dropdown.classList.toggle("show");
+    }
+
+    document.addEventListener("click", function (event) {
+        const dropdown = document.getElementById("userDropdown");
+        const userBox = document.getElementById("userBox");
+
+        if (!dropdown || !userBox) return;
+
+        if (!userBox.contains(event.target)) {
+            dropdown.classList.remove("show");
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        refreshCartBadge();
+    });
+
+    function refreshCartBadge() {
+        fetch('@Url.Action("GetCartCount", "Order")')
+            .then(response => response.json())
+            .then(count => {
+                const badge = document.getElementById('cartCount');
+                if (badge) {
+                    badge.innerText = count;
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            })
+            .catch(error => {
+                console.error("GetCartCount error:", error);
+            });
+    }
+</script>
+
+<style>
+
+    a {
+        text-decoration: none !important;
+    }
+
+    .nav-center a,
+    .nav-center a:visited,
+    .nav-center a:hover,
+    .nav-center a:active,
+    .nav-center a:focus {
+        text-decoration: none !important;
+        color: white;
+    }
+    .custom-navbar {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        padding: 12px 0;
+        color: white;
+        position: relative;
+        z-index: 1000;
+    }
+
+    .nav-container {
+        width: 95%;
+        margin: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .logo {
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-decoration: none;
+    }
+
+        .logo span {
+            margin-left: 5px;
+        }
+
+    .nav-center {
+        display: flex;
+        gap: 25px;
+    }
+
+        .nav-center a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+        }
+
+            .nav-center a::after {
+                content: "";
+                position: absolute;
+                width: 0;
+                height: 2px;
+                background: white;
+                left: 0;
+                bottom: -4px;
+                transition: 0.3s;
+            }
+
+            .nav-center a:hover::after {
+                width: 100%;
+            }
+
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cart-box {
+        position: relative;
+        font-size: 22px;
+        color: white;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+    }
+
+    .cart-badge {
+        position: absolute;
+        top: -4px;
+        right: -6px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        background: #ff3b30;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+        border-radius: 999px;
+        border: 2px solid #0d6efd;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-login {
+        padding: 6px 12px;
+        border: 1px solid white;
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+    }
+
+        .btn-login:hover {
+            background: white;
+            color: #0d6efd;
+        }
+
+    .btn-register {
+        padding: 6px 12px;
+        background: white;
+        color: #0d6efd;
+        border-radius: 6px;
+        text-decoration: none;
+    }
+
+        .btn-register:hover {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+    .user-box {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .user-trigger {
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+        user-select: none;
+    }
+
+        .user-trigger:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+    .user-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 10px);
+        background: white;
+        color: black;
+        border-radius: 12px;
+        min-width: 190px;
+        display: none;
+        flex-direction: column;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+        border: 1px solid #eee;
+        overflow: hidden;
+        z-index: 1100;
+    }
+
+        .user-dropdown.show {
+            display: flex;
+        }
+
+        .user-dropdown a {
+            padding: 12px 14px;
+            text-decoration: none;
+            color: black;
+            display: block;
+        }
+
+            .user-dropdown a:hover {
+                background: #f1f1f1;
+            }
+
+        .user-dropdown hr {
+            margin: 0;
+            border: none;
+            border-top: 1px solid #e9ecef;
+        }
+
+    .logout {
+        color: red !important;
+    }
+
+    @@media (max-width: 992px) {
+        .nav-container {
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .nav-center {
+            order: 3;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    }
+</style>

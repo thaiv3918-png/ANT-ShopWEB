@@ -1,0 +1,277 @@
+﻿@model List<SV22T1020740.Models.Sales.ShoppingCartItem>
+
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    decimal totalAmount = Model?.Sum(x => x.Quantity * x.SalePrice) ?? 0;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 cart-header">
+        <h2 class="fw-bold mb-0">Giỏ hàng của bạn</h2>
+        <a href="@Url.Action("Index", "Product")" class="btn btn-outline-primary">
+            Tiếp tục mua hàng
+        </a>
+    </div>
+
+    <div id="cartContainer">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="alert alert-info">
+                Giỏ hàng của bạn đang trống.
+            </div>
+
+            <a href="@Url.Action("Index", "Product")" class="btn btn-primary">
+                Đi đến trang sản phẩm.
+            </a>
+        }
+        else
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0 cart-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:120px;">Ảnh</th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center" style="width:140px;">Số lượng</th>
+                                    <th class="text-end" style="width:160px;">Đơn giá</th>
+                                    <th class="text-end" style="width:180px;">Thành tiền</th>
+                                    <th class="text-center" style="width:120px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    var imageUrl = string.IsNullOrWhiteSpace(item.Photo)
+                                    ? "/images/no-image.png"
+                                    : item.Photo;
+
+                                    <tr>
+                                        <td class="text-center">
+                                            <div class="cart-image-box">
+                                                <img src="@imageUrl"
+                                                     alt="Ảnh sản phẩm"
+                                                     class="cart-image"
+                                                     onerror="this.onerror=null;this.src='/images/no-image.png';this.alt='No image';" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold cart-product-name">@item.ProductName</div>
+                                            <div class="text-muted small">Mã sản phẩm: @item.ProductID</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="number"
+                                                   min="1"
+                                                   value="@item.Quantity"
+                                                   class="form-control form-control-sm mx-auto"
+                                                   style="width:90px;"
+                                                   onchange="updateCartItem(@item.ProductID, this.value)" />
+                                        </td>
+                                        <td class="text-end">
+                                            @item.SalePrice.ToString("N0") đ
+                                        </td>
+                                        <td class="text-end fw-bold text-danger">
+                                            @((item.Quantity * item.SalePrice).ToString("N0")) đ
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="deleteCartItem(@item.ProductID)">
+                                                Xóa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="4" class="text-end">Tổng cộng</th>
+                                    <th class="text-end text-danger fs-5">
+                                        @totalAmount.ToString("N0") đ
+                                    </th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 cart-actions">
+                <button type="button" class="btn btn-outline-danger" onclick="clearCart()">
+                    Xóa toàn bộ giỏ hàng
+                </button>
+
+                <a href="@Url.Action("Checkout", "Order")" class="btn btn-success btn-lg">
+                    Tiến hành đặt hàng
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .cart-image-box {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #eee;
+    }
+
+    .cart-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .cart-product-name {
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    @@media (max-width: 768px) {
+        .cart-header, .cart-actions
+
+    {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 12px;
+    }
+
+    .cart-actions .btn,
+    .cart-header .btn {
+        width: 100%;
+    }
+
+    .cart-table th,
+    .cart-table td {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .cart-image-box {
+        width: 60px;
+        height: 60px;
+    }
+
+    }
+</style>
+
+@section scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            updateCartCount();
+        });
+        function reloadCart() {
+            fetch('@Url.Action("Cart", "Order")', {
+                method: 'GET'
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newCart = doc.getElementById('cartContainer');
+
+                if (newCart) {
+                    document.getElementById('cartContainer').innerHTML = newCart.innerHTML;
+                }
+
+                updateCartCount();
+            })
+            .catch(() => {
+                alert("Không thể tải lại giỏ hàng");
+            });
+        }
+
+        function updateCartItem(productId, quantity) {
+            quantity = parseInt(quantity);
+
+            if (isNaN(quantity) || quantity <= 0) {
+                alert("Số lượng phải lớn hơn 0");
+                return;
+            }
+
+            fetch('@Url.Action("UpdateCartItem", "Order")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'productId=' + encodeURIComponent(productId) + '&quantity=' + encodeURIComponent(quantity)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code > 0) {
+                    reloadCart();
+                } else {
+                    alert(data.message || "Không thể cập nhật giỏ hàng");
+                }
+            })
+            .catch(() => {
+                alert("Lỗi hệ thống");
+            });
+        }
+
+        function deleteCartItem(productId) {
+            if (!confirm("Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?")) {
+                return;
+            }
+
+            fetch('@Url.Action("DeleteCartItem", "Order")?productId=' + encodeURIComponent(productId), {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code > 0) {
+                    reloadCart();
+                } else {
+                    alert(data.message || "Không thể xóa sản phẩm");
+                }
+            })
+            .catch(() => {
+                alert("Lỗi hệ thống");
+            });
+        }
+
+        function clearCart() {
+            if (!confirm("Bạn có chắc muốn xóa toàn bộ giỏ hàng?")) {
+                return;
+            }
+
+            fetch('@Url.Action("ClearCart", "Order")', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code > 0) {
+                    reloadCart();
+                } else {
+                    alert(data.message || "Không thể xóa giỏ hàng");
+                }
+            })
+            .catch(() => {
+                alert("Lỗi hệ thống");
+            });
+        }
+
+        function updateCartCount() {
+            fetch('@Url.Action("GetCartCount", "Order")')
+            .then(response => response.json())
+            .then(count => {
+                const badge = document.getElementById('cartCount');
+                if (badge) {
+                    badge.innerText = count;
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            })
+            .catch(() => {});
+        }
+    </script>
+}
